@@ -1,0 +1,98 @@
+{
+  "entities": {
+    "Product": {
+      "title": "Product",
+      "description": "Product configuration for the storefront.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 100 },
+        "name": { "type": "string", "maxLength": 200 },
+        "description": { "type": "string", "maxLength": 5000 },
+        "price": { "type": "number" },
+        "currency": { "type": "string", "maxLength": 10 },
+        "images": { 
+          "type": "array",
+          "description": "Array of product images",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string", "maxLength": 100 },
+              "url": { "type": "string", "maxLength": 1000 },
+              "isPrimary": { "type": "boolean" }
+            }
+          }
+        },
+        "primaryImage": { "type": "string", "maxLength": 1000 },
+        "active": { "type": "boolean" },
+        "createdAt": { "type": "timestamp" },
+        "updatedAt": { "type": "timestamp" }
+      },
+      "required": ["name", "price", "active"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Customer order data.",
+      "type": "object",
+      "properties": {
+        "orderId": { "type": "string", "maxLength": 20 },
+        "createdAt": { "type": "timestamp" },
+        "customerName": { "type": "string", "maxLength": 100 },
+        "phone": { "type": "string", "maxLength": 20 },
+        "address": { "type": "string", "maxLength": 500 },
+        "area": { "type": "string", "maxLength": 50 },
+        "district": { "type": "string", "maxLength": 50 },
+        "productId": { "type": "string", "maxLength": 100 },
+        "productName": { "type": "string", "maxLength": 200 },
+        "quantity": { "type": "number" },
+        "productPrice": { "type": "number" },
+        "deliveryCharge": { "type": "number" },
+        "totalAmount": { "type": "number" },
+        "paymentMethod": { "type": "string", "maxLength": 50 },
+        "orderStatus": { "type": "string", "maxLength": 50 },
+        "notes": { "type": "string", "maxLength": 1000 },
+        "adminNotes": { "type": "string", "maxLength": 2000 }
+      },
+      "required": ["orderId", "customerName", "phone", "address", "orderStatus"]
+    },
+    "Settings": {
+      "title": "Settings",
+      "description": "Global store settings.",
+      "type": "object",
+      "properties": {
+        "deliveryInside": { "type": "number" },
+        "deliveryOutside": { "type": "number" },
+        "whatsappNumber": { "type": "string", "maxLength": 50 },
+        "contactPhone": { "type": "string", "maxLength": 50 },
+        "contactEmail": { "type": "string", "maxLength": 100 },
+        "deliveryInfo": { "type": "string", "maxLength": 1000 }
+      }
+    },
+    "Admin": {
+      "title": "Admin",
+      "description": "Admin user roles.",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "maxLength": 100 },
+        "createdAt": { "type": "timestamp" }
+      }
+    }
+  },
+  "firestore": {
+    "/products/{productId}": {
+      "schema": { "$ref": "#/entities/Product" },
+      "description": "Products available in the store."
+    },
+    "/orders/{orderId}": {
+      "schema": { "$ref": "#/entities/Order" },
+      "description": "Customer orders. Document ID is a combination of orderId and phone."
+    },
+    "/settings/{settingId}": {
+      "schema": { "$ref": "#/entities/Settings" },
+      "description": "Global settings."
+    },
+    "/admins/{uid}": {
+      "schema": { "$ref": "#/entities/Admin" },
+      "description": "List of admin users by UID."
+    }
+  }
+}

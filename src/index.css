@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-white: #FFFFFF;
+  --color-brand-black: #1A1A1A;
+  --color-brand-pink: #E8C8C8; /* Elegant soft blush pink */
+  --color-brand-pink-light: #F9F5F5; /* Very soft background pink */
+  --color-brand-gray: #F4F4F4;
+  --color-brand-gray-dark: #4A4A4A; /* High contrast gray */
+
+  --font-sans: "Plus Jakarta Sans", sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-brand-white text-brand-black font-sans antialiased selection:bg-brand-pink/50 selection:text-brand-black;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold tracking-tight text-brand-black;
+  }
+}

@@ -1,0 +1,106 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 1. Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helpers
+    function isSignedIn() { return request.auth != null; }
+    function isAdmin() { 
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+        request.auth.token.email == 'ppika3243@gmail.com'
+      );
+    }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+
+    // Validation for Admins
+    function isValidAdmin(data) {
+      return data.keys().hasAll(['email']) 
+        && data.email is string && data.email.size() <= 100;
+    }
+
+    // Validation for Settings
+    function isValidSettings(data) {
+      return data.keys().hasAll(['deliveryInside', 'deliveryOutside']) 
+        && data.deliveryInside is number 
+        && data.deliveryOutside is number
+        && (!('whatsappNumber' in data) || (data.whatsappNumber is string && data.whatsappNumber.size() <= 50))
+        && (!('contactPhone' in data) || (data.contactPhone is string && data.contactPhone.size() <= 50))
+        && (!('contactEmail' in data) || (data.contactEmail is string && data.contactEmail.size() <= 100))
+        && (!('deliveryInfo' in data) || (data.deliveryInfo is string && data.deliveryInfo.size() <= 1000));
+    }
+
+    // Validation for Product
+    function isValidProduct(data) {
+      return data.keys().hasAll(['name', 'price', 'active'])
+        && data.name is string && data.name.size() <= 200
+        && data.price is number
+        && data.active is bool
+        && (!('description' in data) || (data.description is string && data.description.size() <= 5000))
+        && (!('currency' in data) || (data.currency is string && data.currency.size() <= 10))
+        && (!('images' in data) || (data.images is list && data.images.size() <= 50))
+        && (!('primaryImage' in data) || (data.primaryImage is string && data.primaryImage.size() <= 1000));
+    }
+
+    // Validation for Order
+    function isValidOrder(data) {
+      return data.keys().hasAll(['orderId', 'customerName', 'phone', 'address', 'orderStatus'])
+        && data.orderId is string && data.orderId.size() <= 20
+        && data.customerName is string && data.customerName.size() <= 100
+        && data.phone is string && data.phone.size() <= 20
+        && data.address is string && data.address.size() <= 500
+        && data.orderStatus is string && data.orderStatus.size() <= 50
+        && (!('area' in data) || (data.area is string && data.area.size() <= 50))
+        && (!('district' in data) || (data.district is string && data.district.size() <= 50))
+        && (!('productId' in data) || (data.productId is string && data.productId.size() <= 100))
+        && (!('productName' in data) || (data.productName is string && data.productName.size() <= 200))
+        && (!('quantity' in data) || (data.quantity is number))
+        && (!('productPrice' in data) || (data.productPrice is number))
+        && (!('deliveryCharge' in data) || (data.deliveryCharge is number))
+        && (!('totalAmount' in data) || (data.totalAmount is number))
+        && (!('paymentMethod' in data) || (data.paymentMethod is string && data.paymentMethod.size() <= 50))
+        && (!('notes' in data) || (data.notes is string && data.notes.size() <= 1000))
+        && (!('adminNotes' in data) || (data.adminNotes is string && data.adminNotes.size() <= 2000))
+        && (!('createdAt' in data) || data.createdAt is timestamp);
+    }
+
+    // Admins Collection
+    match /admins/{uid} {
+      allow read: if isAdmin();
+      allow write: if isAdmin() && isValidId(uid) && isValidAdmin(incoming());
+    }
+
+    // Settings Collection
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidId(settingId) && isValidSettings(incoming());
+    }
+
+    // Products Collection
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidId(productId) && isValidProduct(incoming());
+    }
+
+    // Orders Collection
+    match /orders/{orderDocId} {
+      // Guests can read if they know the document ID (orderId_phone).
+      allow get: if isValidId(orderDocId);
+      // Only admins can list orders.
+      allow list: if isAdmin();
+      
+      // Anyone can create an order.
+      allow create: if isValidId(orderDocId) && isValidOrder(incoming()) && incoming().orderStatus == 'Pending';
+      
+      // Only admins can update or delete orders.
+      allow update: if isAdmin() && isValidId(orderDocId) && isValidOrder(incoming());
+      allow delete: if isAdmin() && isValidId(orderDocId);
+    }
+  }
+}

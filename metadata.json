@@ -1,0 +1,6 @@
+{
+  "name": "BODYBOND",
+  "description": "Premium fashion body adhesive. Your Outfit. Your Confidence. Your Hold.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
